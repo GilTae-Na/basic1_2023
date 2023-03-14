@@ -213,6 +213,14 @@ public class HomeController {
         return (id++) + "번 사람을 등록했습니다.";
     }
 
+    @GetMapping("/home/removePerson")
+    //사람 보여주기
+    @ResponseBody
+    public List<Person> removePerson(@RequestParam(defaultValue = "0") int id) {
+        list.remove(id-1);
+        return list;
+    }
+
     @GetMapping("/home/people")
     //사람 보여주기
     @ResponseBody
@@ -268,4 +276,8 @@ class Person{
     private int id;
     private String name;
     private int age;
+
+    public int getId(int id) {
+        return this.id;
+    }
 }
