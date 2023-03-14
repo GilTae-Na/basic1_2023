@@ -1,5 +1,8 @@
 package com.ll.basic1;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,10 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 // @Controller 의 의미
 // 개발자가 스프링부트에게 말한다.
@@ -227,6 +228,99 @@ public class HomeController {
     public List<Person> showPerson() {
         return list;
     }
+
+
+    @GetMapping("/home/removePerson2")
+    @ResponseBody
+    //강사님 코드
+    public String removePerson2(int id) {
+        // person -> person.getId() == id
+        // 위 함수가 참인 엘리먼트(요소) 경우가 존재하면, 해당 요소를 삭제한다.
+        // removed 에는 삭제수행여부가 저장된다.
+        // 조건에 맞는걸 찾았고 삭제까지 되었다면 true, 아니면 false
+        boolean removed = list.removeIf(person -> person.getId() == id);
+
+        if (removed == false) {
+            return "%d번 사람이 존재하지 않습니다.".formatted(id);
+        }
+
+        /* 람다식을 안쓴 코드
+        for ( Person p : list ) {
+            if ( p.getId() == id ) list.remove(p);
+        }*/
+
+        return "%d번 사람이 삭제되었습니다.".formatted(id);
+    }
+    @GetMapping("home/modifyPerson")
+    @ResponseBody
+    public String modifyPerson(int id, String name, int age) {
+        //list.set(id-1, new Person(id, name, age));
+
+        for ( Person p : list ) {
+            if ( p.getId() == id ){
+                list.set(id-1, new Person(id, name, age));
+                return "%d번 사람이 수정되었습니다.".formatted(id);
+            }
+            else if( p.getId() != id) return "%d번 사람이 존재하지 않습니다.".formatted(id);
+        }
+        return "";
+    }
+
+    //강사님 코드 쓰기
+    /*
+    @GetMapping("/home/modifyPerson")
+    @ResponseBody
+    public String modifyPerson(int id, String name, int age) {
+        Person found = people
+                .stream()
+                .filter(p -> p.getId() == id)
+                .findFirst()
+                .orElse(null);
+
+        if (found == null) {
+            return "%d번 사람이 존재하지 않습니다.".formatted(id);
+        }
+
+        found.setName(name);
+        found.setAge(age);
+
+        return "%d번 사람이 수정되었습니다.".formatted(id);
+    }*/
+
+    //쿠키
+    //스프링 부트는 브라우저(고객)를 구분하지 못한다.
+    @GetMapping("/home/reqAndResp")
+    @ResponseBody
+    public void showReqAndResp(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        int age = Integer.parseInt(req.getParameter("age"));
+        resp.getWriter().append("Hello, you are %d years old.".formatted(age));
+    }
+
+    @GetMapping("/home/cookie/increase")
+    @ResponseBody
+    public int showCookieIncrease(HttpServletRequest req, HttpServletResponse resp) throws IOException { // 리턴되는 int 값은 String 화 되어서 고객(브라우저)에게 전달된다.
+        int countInCookie = 0;
+
+        if (req.getCookies() != null) {
+            countInCookie = Arrays.stream(req.getCookies())
+                    .filter(cookie -> cookie.getName().equals("count"))
+                    .map(cookie -> cookie.getValue())
+                    .mapToInt(Integer::parseInt)
+                    .findFirst()
+                    .orElse(0);
+        }
+
+        int newCountInCookie = countInCookie + 1;
+
+        resp.addCookie(new Cookie("count", newCountInCookie + ""));
+
+        return newCountInCookie;
+    }
+
+
+
+
+
 }
 class Car {
     private final int id;
@@ -281,3 +375,22 @@ class Person{
         return this.id;
     }
 }
+
+/* 강사님껏
+class Person {
+    private static int lastId;
+    private final int id;
+    @Setter
+    private String name;
+    @Setter
+    private int age;
+
+
+    static {
+        lastId = 0;
+    }
+
+    Person(String name, int age) {
+        this(++lastId, name, age);
+    }
+}*/
