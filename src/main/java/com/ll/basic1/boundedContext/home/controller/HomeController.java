@@ -1,5 +1,7 @@
 package com.ll.basic1.boundedContext.home.controller;
 
+import com.ll.basic1.boundedContext.member.entity.Member;
+import com.ll.basic1.boundedContext.member.service.MemberService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,11 +23,14 @@ import java.util.*;
 @Controller
 public class HomeController {
     private int count;
-    private List<Person> people;
+    private final List<Person> people;
+    // 필드 주입
+    private final MemberService memberService;
 
-    public HomeController() {
+    public HomeController(MemberService memberService) {
         count = -1;
         people = new ArrayList<>();
+        this.memberService = memberService;
     }
 
     // @GetMapping("/home/main") 의 의미
@@ -283,6 +288,12 @@ public class HomeController {
 
         // 응답 본문
         return newCountInCookie;
+    }
+
+    @GetMapping("/home/user1")
+    @ResponseBody
+    public Member showUser1() {
+        return memberService.findByUsername("user1");
     }
 }
 
